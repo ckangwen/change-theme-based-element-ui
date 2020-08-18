@@ -9,7 +9,7 @@ function css (done) {
   gulp.src(path.resolve('../src/theme/index.css'))
     .pipe(cssWrap({ selector: prefix }))
     .pipe(cleanCSS())
-    .pipe(gulp.dest('dist'))
+    .pipe(gulp.dest('../lib'))
   done()
 }
 

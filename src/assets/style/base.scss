@@ -1,0 +1,62 @@
+.wrapper {
+  height: 100%;
+}
+
+a {
+  text-decoration: none;
+}
+
+header {
+  width: 100%;
+  padding: 0 20px;
+  z-index: 1;
+  box-sizing: border-box;
+
+  &::after {
+    display: inline-block;
+    content: "";
+    height: 100%;
+    vertical-align: middle
+  }
+}
+
+.container {
+  padding-top: 80px;
+}
+
+.menu {
+  height: 100%;
+}
+
+.content {
+  padding: 20px;
+}
+
+
+.header-operations {
+  float: right;
+  margin: 0;
+  padding-right: 30px;
+  height: 100%;
+
+  &::after {
+    display: inline-block;
+    content: "";
+    height: 100%;
+    vertical-align: middle
+  }
+}
+
+.theme-form {
+  text-align: center;
+}
+
+.query-form {
+  margin-top: 20px;
+  padding-top: 25px;
+  background-color: #f2f2f2;
+}
+
+.table {
+  margin-top: 30px;
+}

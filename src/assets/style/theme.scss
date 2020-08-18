@@ -1,0 +1,10 @@
+.theme-#{$theme-name} {
+  .global-header {
+    background-color: $background-color;
+    color: $primary-text-color;
+
+    .el-dropdown {
+      color: $primary-text-color;
+    }
+  }
+}

@@ -1,5 +1,5 @@
 module.exports = {
-  baseUrl: '/change-theme-based-element-ui/',
+  publicPath: '/change-theme-based-element-ui/',
   devServer: {
     proxy: {
       '/': {

@@ -41,30 +41,18 @@
     <el-dialog
       center
       :visible.sync="themeDialogVisible"
-      title="切换主题"
       width="400px">
-      <el-form
-        :model="colors"
-        ref="form"
-        class="theme-form"
-        label-position="top"
-        label-width="70px">
-        <el-form-item label="选择主题" prop="primary">
-          <el-color-picker v-model="colors.primary" ></el-color-picker>
-        </el-form-item>
-        <el-form-item class="color-buttons">
-          <el-button type="primary" @click="submitForm">提交</el-button>
-          <el-button @click="resetForm">重置</el-button>
-        </el-form-item>
-      </el-form>
+        <div>选择主题</div>
+        <el-color-picker v-model="color"></el-color-picker>
     </el-dialog>
   </el-container>
 </div>
 </template>
 
 <script>
-import generateColors from './utils/color'
+import { getStyleTemplate, getFile, getColorClusterMap } from './utils/theme'
 import ComponentPreview from '@/components/ComponentPreview'
+const defaultColor = '#409eff'
 export default {
   name: 'app',
   components: {
@@ -72,12 +60,12 @@ export default {
   },
   data () {
     return {
-      colors: {
-        primary: '#409eff'
-      },
+      color: defaultColor,
+      styleId: 'el-chalk-style',
       originalStylesheetCount: -1,
       originalStyle: '',
-      primaryColor: '#409eff',
+      styleTemplate: '',
+      colorMap: {},
       themeDialogVisible: false
     }
   },
@@ -97,26 +85,26 @@ export default {
     },
 
     writeNewStyle () {
-      let cssText = this.originalStyle
-      Object.keys(this.colors).forEach(key => {
-        cssText = cssText.replace(new RegExp('(:|\\s+)' + key, 'g'), '$1' + this.colors[key])
+      let cssText = this.styleTemplate
+      if (!cssText) return
+      Object.keys(this.colorMap).forEach(key => {
+        cssText = cssText.replace(new RegExp('(:|\\s+)' + this.colorMap[key], 'g'), '$1' + key)
       })
 
-      if (this.originalStylesheetCount === document.styleSheets.length) {
-        const style = document.createElement('style')
-        style.innerText = cssText
-        document.head.appendChild(style)
-      } else {
-        document.head.lastChild.innerText = cssText
+      let styleTag = document.getElementById(this.styleId)
+      if (!styleTag) {
+        styleTag = document.createElement('style')
+        styleTag.setAttribute('id', this.styleId)
+        document.head.appendChild(styleTag)
       }
+      styleTag.innerText = cssText
     },
 
     submitForm () {
       this.$refs.form.validate(valid => {
         if (valid) {
           this.themeDialogVisible = false
-          this.primaryColor = this.colors.primary
-          this.colors = Object.assign({}, this.colors, generateColors(this.colors.primary))
+          this.primaryColor = this.color
           this.writeNewStyle()
         } else {
           return false
@@ -127,67 +115,31 @@ export default {
     resetForm () {
       this.$refs.form.resetFields()
     },
-
-    getStyleTemplate (data) {
-      const colorMap = {
-        '#3a8ee6': 'shade-1',
-        '#409eff': 'primary',
-        '#53a8ff': 'light-1',
-        '#66b1ff': 'light-2',
-        '#79bbff': 'light-3',
-        '#8cc5ff': 'light-4',
-        '#a0cfff': 'light-5',
-        '#b3d8ff': 'light-6',
-        '#c6e2ff': 'light-7',
-        '#d9ecff': 'light-8',
-        '#ecf5ff': 'light-9'
-      }
-      Object.keys(colorMap).forEach(key => {
-        const value = colorMap[key]
-        data = data.replace(new RegExp(key, 'ig'), value)
-      })
-      return data
-    },
-
-    getFile (url, isBlob = false) {
-      return new Promise((resolve, reject) => {
-        const client = new XMLHttpRequest()
-        client.responseType = isBlob ? 'blob' : ''
-        client.onreadystatechange = () => {
-          if (client.readyState !== 4) {
-            return
-          }
-          if (client.status === 200) {
-            const urlArr = client.responseURL.split('/')
-            resolve({
-              data: client.responseText.replace(/@font-face{[^}]+}/, ''),
-              url: urlArr[urlArr.length - 1]
-            })
-          } else {
-            reject(new Error(client.statusText))
-          }
-        }
-        client.open('GET', url)
-        client.send()
-      })
-    },
-
     getIndexStyle () {
-      this.getFile('https://unpkg.com/element-ui/lib/theme-chalk/index.css')
+      getFile('https://unpkg.com/element-ui/lib/theme-chalk/index.css')
         .then(({ data }) => {
-          this.originalStyle = this.getStyleTemplate(data)
+          this.originalStyle = data
+          this.styleTemplate = getStyleTemplate(this.color, data)
         })
     }
   },
 
-  created () {
-    this.getIndexStyle()
+  watch: {
+    color: {
+      handler: async function (val, oldVal) {
+        if (val === oldVal) return
+        this.colorMap = getColorClusterMap(val)
+        if (val !== defaultColor) {
+          // console.log(this.styleTemplate)
+          this.writeNewStyle()
+        }
+      },
+      immediate: true
+    }
   },
-
-  mounted () {
-    this.$nextTick(() => {
-      this.originalStylesheetCount = document.styleSheets.length
-    })
+  created () {
+    this.colorMap = getColorClusterMap(this.color)
+    this.getIndexStyle()
   }
 }
 </script>
